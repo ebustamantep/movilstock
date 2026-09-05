@@ -1,0 +1,18 @@
+# Temporary / generated files
+/temp/
+*.log
+
+# Build output
+/build/makepack-*.lock
+/build/*.zip
+/build/*.tar.gz
+
+# OS / editor
+Thumbs.db
+.DS_Store
+*.swp
+.vscode/
+.idea/
+
+# Module packager temp
+/tmp/

@@ -1,0 +1,69 @@
+# Archivo de traducción
+
+#
+# Genérico
+#
+
+# Etiqueta del módulo 'ModuleMovilStockName'
+ModuleMovilStockName = MovilStock
+# Descripción del módulo 'ModuleMovilStockDesc'
+ModuleMovilStockDesc = Trasladar mercancía entre almacenes.
+
+#
+# Página de configuración
+#
+MovilStockSetup = Configuración de MovilStock
+Settings = Configuración
+MovilStockSetupPage = Página de configuración de MovilStock
+NewSection=Nueva sección
+MainWarehouse = Almacén principal
+MainWarehouseHelp = Almacén usado por defecto como origen de los traslados.
+TransferRefMask = Máscara de referencia de traslado
+TransferRefMaskHelp = Máscara usada para generar la referencia de un traslado (ejemplo: /TS-{y}{m}{d}-{0000}).
+
+#
+# Página "Acerca de"
+#
+About = Acerca de
+MovilStockAbout = Acerca de MovilStock
+MovilStockAboutPage = Página de información de MovilStock
+
+#
+# Página de traslado
+#
+MovilStockArea = MovilStock
+MoveStockTransfer = Enviar mercancía entre almacenes
+MovilStockTransfer = Traslado de stock
+TransferParams = Parámetros del traslado
+SourceWarehouse = Almacén origen
+DestWarehouse = Almacén destino
+AvailableStock = Stock disponible
+QtyToTransfer = Cantidad a trasladar
+Send = Enviar
+WarehouseRequired = El almacén de origen y el de destino son obligatorios.
+WarehouseSameForbidden = El almacén de origen y el de destino no pueden ser el mismo.
+NoWarehouse = No hay almacenes definidos.
+SelectSourceFirst = Selecciona un almacén de origen para ver los productos disponibles.
+NoQtyToTransfer = No se ingresó ninguna cantidad para trasladar.
+NotEnoughStock = Stock insuficiente para %s (disponible: %s, solicitado: %s).
+TransferDone = Traslado realizado con éxito.
+
+#
+# Página de historial
+#
+TransferHistory = Historial de traslados
+DateFrom = Fecha desde
+DateTo = Fecha hasta
+Search = Buscar
+Lines = Líneas
+AuthorUser = Autor
+Date = Fecha
+Show = Mostrar
+Hide = Ocultar
+Qty = Cantidad
+Actions = Acciones
+RecordDeleted = Traslado eliminado.
+NoPermissionToCreate = No tiene permisos para crear traslados.
+StockByWarehouse = Stock por almacén
+Warehouse = Almacén
+Product = Producto

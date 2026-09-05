@@ -1,0 +1,69 @@
+# Translation file
+
+#
+# Generic
+#
+
+# Module label 'ModuleMovilStockName'
+ModuleMovilStockName = MovilStock
+# Module description 'ModuleMovilStockDesc'
+ModuleMovilStockDesc = Transfer merchandise between warehouses.
+
+#
+# Admin page
+#
+MovilStockSetup = MovilStock setup
+Settings = Settings
+MovilStockSetupPage = MovilStock setup page
+NewSection=New section
+MainWarehouse = Main warehouse
+MainWarehouseHelp = Warehouse used by default as the source of transfers.
+TransferRefMask = Transfer reference mask
+TransferRefMaskHelp = Mask used to generate the reference of a transfer (example: /TS-{y}{m}{d}-{0000}).
+
+#
+# About page
+#
+About = About
+MovilStockAbout = About MovilStock
+MovilStockAboutPage = MovilStock about page
+
+#
+# Transfer page
+#
+MovilStockArea = MovilStock
+MoveStockTransfer = Move stock between warehouses
+MovilStockTransfer = Stock transfer
+TransferParams = Transfer parameters
+SourceWarehouse = Source warehouse
+DestWarehouse = Destination warehouse
+AvailableStock = Available stock
+QtyToTransfer = Quantity to transfer
+Send = Send
+WarehouseRequired = Both source and destination warehouses are required.
+WarehouseSameForbidden = The source and destination warehouses cannot be the same.
+NoWarehouse = No warehouse is defined.
+SelectSourceFirst = Select a source warehouse to see the available products.
+NoQtyToTransfer = No quantity was entered to transfer.
+NotEnoughStock = Not enough stock for %s (available: %s, requested: %s).
+TransferDone = Transfer completed successfully.
+
+#
+# History page
+#
+TransferHistory = Transfer history
+DateFrom = Date from
+DateTo = Date to
+Search = Search
+Lines = Lines
+AuthorUser = Author
+Date = Date
+Show = Show
+Hide = Hide
+Qty = Quantity
+Actions = Actions
+RecordDeleted = Transfer deleted.
+NoPermissionToCreate = You do not have permission to create transfers.
+StockByWarehouse = Stock by warehouse
+Warehouse = Warehouse
+Product = Product
