@@ -57,7 +57,7 @@ dol_include_once('/movilstock/class/movilstocktransfer.class.php');
 $langs->loadLangs(array("movilstock@movilstock", "stocks", "products"));
 
 $action = GETPOST('action', 'aZ09');
-$id = GETPOSTINT('id');
+$showtransfer = GETPOSTINT('id');
 
 if (empty($user->rights->movilstock->transfer->read)) {
 	accessforbidden();
@@ -75,9 +75,9 @@ $to = GETPOST('date_end', 'alpha');
 /*
  * Actions
  */
-if ($action == 'delete' && $candelete && $id > 0) {
+if ($action == 'delete' && $candelete && $showtransfer > 0) {
 	$object = new MovilStockTransfer($db);
-	$object->fetch($id);
+	$object->fetch($showtransfer);
 	if ($object->id > 0 && $object->delete($user) > 0) {
 		setEventMessages($langs->trans("RecordDeleted"), null, 'mesgs');
 	} else {
@@ -160,7 +160,7 @@ if ($candelete) {
 }
 print '</tr>';
 
-$showlines = ($id > 0);
+$showlines = ($showtransfer > 0);
 
 if ($resql) {
 	$num = $db->num_rows($resql);
@@ -173,8 +173,12 @@ if ($resql) {
 		$src = isset($warehouses[$obj->fk_warehouse_source]) ? $warehouses[$obj->fk_warehouse_source] : $obj->fk_warehouse_source;
 		$dst = isset($warehouses[$obj->fk_warehouse_dest]) ? $warehouses[$obj->fk_warehouse_dest] : $obj->fk_warehouse_dest;
 
+		$isopen = ($showlines && $showtransfer == $obj->rowid);
+		$detailurl = $_SERVER["PHP_SELF"].'?id='.$obj->rowid.($search_src ? '&search_src='.$search_src : '').($search_dst ? '&search_dst='.$search_dst : '');
+
+		// Ref is a link to view the detail of the movement
 		print '<tr class="oddeven'.($var ? '' : '1').'">';
-		print '<td class="nowrap">'.$obj->ref.'</td>';
+		print '<td class="nowrap"><a href="'.$detailurl.'">'.img_picto($langs->trans("Show").' '.$obj->ref, 'eye').' '.$obj->ref.'</a></td>';
 		print '<td class="nowrap">'.dol_print_date($db->jdate($obj->date_transfer), 'dayhour').'</td>';
 		print '<td>'.dol_escape_htmltag($src).'</td>';
 		print '<td>'.dol_escape_htmltag($dst).'</td>';
@@ -190,9 +194,8 @@ if ($resql) {
 			$db->free($resc);
 		}
 
-		$isopen = ($showlines && $id == $obj->rowid);
 		if ($nb > 0) {
-			$toggle = '&nbsp;<a href="'.$_SERVER["PHP_SELF"].'?id='.$obj->rowid.($search_src ? '&search_src='.$search_src : '').'">'.($isopen ? $langs->trans("Hide") : $langs->trans("Show")).'</a>';
+			$toggle = '<a href="'.$detailurl.'">'.($isopen ? $langs->trans("Hide") : $langs->trans("Show")).'</a>';
 		} else {
 			$toggle = '';
 		}
@@ -224,13 +227,17 @@ if ($resql) {
 			if ($resl) {
 				$nbc = $db->num_rows($resl);
 				$j = 0;
-				print '<tr class="oddeven"><td colspan="'.($candelete ? 8 : 7).'"><table class="noborder centpercent">';
-				print '<tr class="liste_titre"><td class="width100">'.$langs->trans("Ref").'</td><td>'.$langs->trans("Label").'</td><td class="right width100">'.$langs->trans("Qty").'</td></tr>';
+				print '<tr class="oddeven"><td colspan="'.($candelete ? 8 : 7).'">';
+				print '<table class="noborder centpercent">';
+				print '<tr class="liste_titre"><td class="width100">'.$langs->trans("Ref").'</td><td>'.$langs->trans("Label").'</td><th class="right width100">'.$langs->trans("SourceWarehouse").'</th><td class="right width100">'.$langs->trans("DestWarehouse").'</td><td class="right width100">'.$langs->trans("Qty").'</td></tr>';
+				$total = 0;
 				while ($j < $nbc) {
 					$objl = $db->fetch_object($resl);
-					print '<tr class="oddeven"><td>'.$objl->pref.'</td><td>'.dol_escape_htmltag($objl->plabel).'</td><td class="right">'.price($objl->qty).'</td></tr>';
+					$total += (float) $objl->qty;
+					print '<tr class="oddeven"><td>'.$objl->pref.'</td><td>'.dol_escape_htmltag($objl->plabel).'</td><td class="right">'.dol_escape_htmltag($src).'</td><td class="right">'.dol_escape_htmltag($dst).'</td><td class="right">'.price($objl->qty).'</td></tr>';
 					$j++;
 				}
+				print '<tr class="liste_total"><td colspan="4">'.$langs->trans("Total").'</td><td class="right">'.price($total).'</td></tr>';
 				print '</table></td></tr>';
 				$db->free($resl);
 			}
