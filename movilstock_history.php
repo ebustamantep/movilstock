@@ -120,9 +120,9 @@ foreach ($warehouses as $id => $label) {
 }
 print '</select></td></tr>';
 print '<tr class="oddeven"><td class="fieldrequired">'.$langs->trans("DateFrom").'</td>';
-print '<td><input type="text" name="date_start" value="'.dol_escape_htmltag($from).'" class="minwidth120"></td>';
+print '<td><input type="date" name="date_start" value="'.dol_escape_htmltag($from).'" class="minwidth160"></td>';
 print '<td>'.$langs->trans("DateTo").'</td>';
-print '<td><input type="text" name="date_end" value="'.dol_escape_htmltag($to).'" class="minwidth120">&nbsp;<input type="submit" class="button" value="'.$langs->trans("Search").'"></td></tr>';
+print '<td><input type="date" name="date_end" value="'.dol_escape_htmltag($to).'" class="minwidth160">&nbsp;<input type="submit" class="button" value="'.$langs->trans("Search").'"></td></tr>';
 print '</table>';
 print '</form>';
 print '<br>';
