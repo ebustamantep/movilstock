@@ -9,6 +9,7 @@
 - Show the author name linked to the user card (instead of the raw user id) in the transfer and production histories
 - Use a shipping (truck) icon for the module and its pages
 - Reorder the main tabs as production, stock by warehouse and transfer
+- Reorder the left menu to match the same logical order (production first)
 - Preserve configured settings (main warehouse and reference masks) when the module is disabled and re-enabled
 - Add properly named llx_*.sql files so module tables are created on install
 - Fix transfer history detail not showing
