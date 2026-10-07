@@ -63,9 +63,6 @@ $langs->loadLangs(array("movilstock@movilstock", "stocks", "products"));
 
 $action = GETPOST('action', 'aZ09');
 $tab = GETPOST('tab', 'aZ09');
-if (empty($tab)) {
-	$tab = 'transfer';
-}
 $fk_warehouse_source = GETPOSTINT('fk_warehouse_source');
 $fk_warehouse_dest = GETPOSTINT('fk_warehouse_dest');
 
@@ -76,14 +73,14 @@ if (empty($user->rights->movilstock->transfer->read) && empty($user->rights->mov
 $cancreate = !empty($user->rights->movilstock->transfer->create);
 $cancreateprod = !empty($user->rights->movilstock->production->create);
 
-// Fallback on a tab the user is allowed to see
+// Tabs in logical order: production, stock by warehouse, transfer. Fallback on the first allowed tab.
 $allowedtabs = array();
-if (!empty($user->rights->movilstock->transfer->read)) {
-	$allowedtabs[] = 'transfer';
-	$allowedtabs[] = 'stock';
-}
 if (!empty($user->rights->movilstock->production->read)) {
 	$allowedtabs[] = 'production';
+}
+if (!empty($user->rights->movilstock->transfer->read)) {
+	$allowedtabs[] = 'stock';
+	$allowedtabs[] = 'transfer';
 }
 if (!in_array($tab, $allowedtabs)) {
 	$tab = $allowedtabs[0];
@@ -369,23 +366,23 @@ llxHeader("", $langs->trans("ModuleMovilStockName"), '', '', 0, 0, '', '', '', '
 
 print load_fiche_titre($langs->trans("ModuleMovilStockName"), '', 'fa-truck');
 
-// Build tabs header
+// Build tabs header (logical order: production, stock by warehouse, transfer)
 $head = array();
 $h = 0;
-if (!empty($user->rights->movilstock->transfer->read)) {
-	$head[$h][0] = $_SERVER["PHP_SELF"].'?tab=transfer';
-	$head[$h][1] = $langs->trans("MoveStockTransfer");
-	$head[$h][2] = 'transfer';
-	$h++;
-	$head[$h][0] = $_SERVER["PHP_SELF"].'?tab=stock';
-	$head[$h][1] = $langs->trans("StockByWarehouse");
-	$head[$h][2] = 'stock';
-	$h++;
-}
 if (!empty($user->rights->movilstock->production->read)) {
 	$head[$h][0] = $_SERVER["PHP_SELF"].'?tab=production';
 	$head[$h][1] = $langs->trans("ProductionLoad");
 	$head[$h][2] = 'production';
+	$h++;
+}
+if (!empty($user->rights->movilstock->transfer->read)) {
+	$head[$h][0] = $_SERVER["PHP_SELF"].'?tab=stock';
+	$head[$h][1] = $langs->trans("StockByWarehouse");
+	$head[$h][2] = 'stock';
+	$h++;
+	$head[$h][0] = $_SERVER["PHP_SELF"].'?tab=transfer';
+	$head[$h][1] = $langs->trans("MoveStockTransfer");
+	$head[$h][2] = 'transfer';
 	$h++;
 }
 
