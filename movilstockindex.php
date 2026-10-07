@@ -52,9 +52,12 @@ if (!$res) {
 
 require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 require_once DOL_DOCUMENT_ROOT.'/product/stock/class/entrepot.class.php';
+require_once DOL_DOCUMENT_ROOT.'/product/stock/class/mouvementstock.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.form.class.php';
 dol_include_once('/movilstock/class/movilstocktransfer.class.php');
 dol_include_once('/movilstock/class/movilstocktransferline.class.php');
+dol_include_once('/movilstock/class/movilstockproduction.class.php');
+dol_include_once('/movilstock/class/movilstockproductionline.class.php');
 
 $langs->loadLangs(array("movilstock@movilstock", "stocks", "products"));
 
@@ -67,10 +70,24 @@ $fk_warehouse_source = GETPOSTINT('fk_warehouse_source');
 $fk_warehouse_dest = GETPOSTINT('fk_warehouse_dest');
 
 // Security check - must be internal user with read permission
-if (empty($user->rights->movilstock->transfer->read)) {
+if (empty($user->rights->movilstock->transfer->read) && empty($user->rights->movilstock->production->read)) {
 	accessforbidden();
 }
 $cancreate = !empty($user->rights->movilstock->transfer->create);
+$cancreateprod = !empty($user->rights->movilstock->production->create);
+
+// Fallback on a tab the user is allowed to see
+$allowedtabs = array();
+if (!empty($user->rights->movilstock->transfer->read)) {
+	$allowedtabs[] = 'transfer';
+	$allowedtabs[] = 'stock';
+}
+if (!empty($user->rights->movilstock->production->read)) {
+	$allowedtabs[] = 'production';
+}
+if (!in_array($tab, $allowedtabs)) {
+	$tab = $allowedtabs[0];
+}
 
 $mainwarehouse = getDolGlobalInt('MOVILSTOCK_ID_WAREHOUSE_MAIN');
 
@@ -212,6 +229,137 @@ if ($action == 'confirm' && !empty($user->rights->movilstock->transfer->create))
 	}
 }
 
+if ($action == 'confirmprod' && !empty($user->rights->movilstock->production->create)) {
+	if (empty($mainwarehouse) || empty($warehouses[$mainwarehouse])) {
+		setEventMessages($langs->trans("MainWarehouseNotConfigured"), null, 'errors');
+		$error++;
+	}
+
+	// Collect submitted lines: fk_product, qty, cost, batch, dates
+	$lines = array();
+	if (!$error) {
+		$quantities = GETPOST('qty_', 'array');
+		$costs = GETPOST('cost_', 'array');
+		$lots = GETPOST('lot_', 'array');
+		$eatbys = GETPOST('eatby_', 'array');
+		$sellbys = GETPOST('sellby_', 'array');
+		if (!is_array($quantities)) {
+			$quantities = array();
+		}
+		foreach ($quantities as $fkproduct => $qval) {
+			$fkproduct = (int) $fkproduct;
+			$qty = price2num($qval);
+			if ($fkproduct > 0 && $qty > 0) {
+				$lines[$fkproduct] = array(
+					'qty' => $qty,
+					'price' => (is_array($costs) && isset($costs[$fkproduct])) ? price2num($costs[$fkproduct]) : 0,
+					'batch' => (is_array($lots) && isset($lots[$fkproduct])) ? trim($lots[$fkproduct]) : '',
+					'eatby' => (is_array($eatbys) && isset($eatbys[$fkproduct])) ? trim($eatbys[$fkproduct]) : '',
+					'sellby' => (is_array($sellbys) && isset($sellbys[$fkproduct])) ? trim($sellbys[$fkproduct]) : '',
+				);
+			}
+		}
+	}
+
+	if (!$error && empty($lines)) {
+		setEventMessages($langs->trans("NoQtyToProduce"), null, 'errors');
+		$error++;
+	}
+
+	if (!$error) {
+		$db->begin();
+
+		$object = new MovilStockProduction($db);
+		$object->fk_warehouse = $mainwarehouse;
+		$object->status = MovilStockProduction::STATUS_DONE;
+		$object->date_production = dol_now();
+		$object->fk_user_author = $user->id;
+		$object->note = GETPOST('note', 'restricthtml');
+		$object->ref = $object->getNextNumRef();
+
+		$prodid = $object->create($user);
+		if ($prodid <= 0) {
+			$error++;
+			setEventMessages($object->error, $object->errors, 'errors');
+		} else {
+			foreach ($lines as $fkproduct => $l) {
+				$product = new Product($db);
+				$result = $product->fetch($fkproduct);
+				if ($result < 0) {
+					$error++;
+					setEventMessages($product->error, $product->errors, 'errors');
+					break;
+				}
+
+				$eatbyts = 0;
+				if ($l['eatby'] !== '' && $l['eatby'] != '0000-00-00') {
+					$eatbyts = dol_mktime(0, 0, 0, (int) substr($l['eatby'], 5, 2), (int) substr($l['eatby'], 8, 2), (int) substr($l['eatby'], 0, 4));
+				}
+				$sellbyts = 0;
+				if ($l['sellby'] !== '' && $l['sellby'] != '0000-00-00') {
+					$sellbyts = dol_mktime(0, 0, 0, (int) substr($l['sellby'], 5, 2), (int) substr($l['sellby'], 8, 2), (int) substr($l['sellby'], 0, 4));
+				}
+
+				// Record line
+				$line = new MovilStockProductionLine($db);
+				$line->fk_production = $prodid;
+				$line->fk_product = $fkproduct;
+				$line->qty = $l['qty'];
+				$line->fk_warehouse = $mainwarehouse;
+				$line->price = $l['price'];
+				$line->batch = $l['batch'];
+				$line->eatby = $eatbyts;
+				$line->sellby = $sellbyts;
+				$line->entity = getEntity('movilstockproduction');
+				$lineresult = $line->create($user);
+				if ($lineresult <= 0) {
+					$error++;
+					setEventMessages($line->error, $line->errors, 'errors');
+					break;
+				}
+
+				$stocklabel = $langs->trans("MovilStockProduction").' '.$object->ref;
+
+				// Increase main warehouse (movement 0 = add).
+				// Lot and expiry are optional for now: when no lot is entered we skip the
+				// batch control (skip_batch = true) so a production can be saved without batch data.
+				// When a lot is entered it is recorded normally.
+				$movementstock = new MouvementStock($db);
+				$movementstock->setOrigin('movilstockproduction', $prodid);
+				$result1 = $movementstock->_create(
+					$user,
+					$product->id,
+					$mainwarehouse,
+					$l['qty'],
+					0,
+					$l['price'],
+					$stocklabel,
+					'',
+					'',
+					$eatbyts,
+					$sellbyts,
+					$l['batch'],
+					empty($l['batch'])
+				);
+				if ($result1 < 0) {
+					$error++;
+					setEventMessages($movementstock->error, $movementstock->errors, 'errors');
+					break;
+				}
+			}
+		}
+
+		if (!$error) {
+			$db->commit();
+			setEventMessages($langs->trans("ProductionDone"), null, 'mesgs');
+			header("Location: ".dol_buildpath('/movilstock/movilstock_production_history.php', 1));
+			exit;
+		} else {
+			$db->rollback();
+		}
+	}
+}
+
 /*
  * View
  */
@@ -222,12 +370,23 @@ print load_fiche_titre($langs->trans("ModuleMovilStockName"), '', 'stock.png');
 
 // Build tabs header
 $head = array();
-$head[0][0] = $_SERVER["PHP_SELF"].'?tab=transfer';
-$head[0][1] = $langs->trans("MoveStockTransfer");
-$head[0][2] = 'transfer';
-$head[1][0] = $_SERVER["PHP_SELF"].'?tab=stock';
-$head[1][1] = $langs->trans("StockByWarehouse");
-$head[1][2] = 'stock';
+$h = 0;
+if (!empty($user->rights->movilstock->transfer->read)) {
+	$head[$h][0] = $_SERVER["PHP_SELF"].'?tab=transfer';
+	$head[$h][1] = $langs->trans("MoveStockTransfer");
+	$head[$h][2] = 'transfer';
+	$h++;
+	$head[$h][0] = $_SERVER["PHP_SELF"].'?tab=stock';
+	$head[$h][1] = $langs->trans("StockByWarehouse");
+	$head[$h][2] = 'stock';
+	$h++;
+}
+if (!empty($user->rights->movilstock->production->read)) {
+	$head[$h][0] = $_SERVER["PHP_SELF"].'?tab=production';
+	$head[$h][1] = $langs->trans("ProductionLoad");
+	$head[$h][2] = 'production';
+	$h++;
+}
 
 print dol_get_fiche_head($head, $tab, $langs->trans("ModuleMovilStockName"), -1, "movilstock@movilstock", -1, '');
 
@@ -349,6 +508,96 @@ if ($tab == 'stock') {
 			}
 		}
 		print '</table>';
+	}
+} elseif ($tab == 'production') {
+	// ------------------------------------------------------------
+	// Tab: Production load (increase stock in main warehouse)
+	// ------------------------------------------------------------
+	if (empty($mainwarehouse) || empty($warehouses[$mainwarehouse])) {
+		print '<div class="warning">'.$langs->trans("MainWarehouseNotConfigured").'</div>';
+	} else {
+		$searchprod = GETPOST('search_product', 'alpha');
+		$searchprod = dol_string_nospecial($searchprod);
+
+		print '<form method="GET" action="'.$_SERVER["PHP_SELF"].'" class="marginbottomonly">';
+		print '<input type="hidden" name="tab" value="production">';
+		print '<table class="noborder centpercent">';
+		print '<tr class="liste_titre"><th colspan="2">'.$langs->trans("Filters").'</th></tr>';
+		print '<tr class="oddeven"><td class="fieldrequired width15">'.$langs->trans("Product").'</td>';
+		print '<td><input type="text" name="search_product" value="'.dol_escape_htmltag($searchprod).'" class="minwidth200">&nbsp;<input type="submit" class="button" value="'.$langs->trans("Search").'"></td></tr>';
+		print '</table>';
+		print '</form>';
+		print '<br>';
+
+		print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
+		print '<input type="hidden" name="token" value="'.newToken().'">';
+		print '<input type="hidden" name="action" value="confirmprod">';
+		print '<input type="hidden" name="tab" value="production">';
+
+		print '<table class="noborder centpercent">';
+		print '<tr class="liste_titre"><th colspan="2">'.$langs->trans("ProductionParams").'</th></tr>';
+		print '<tr class="oddeven"><td class="fieldrequired width15">'.$langs->trans("DestWarehouse").'</td>';
+		print '<td>'.dol_escape_htmltag($warehouses[$mainwarehouse]).'</td></tr>';
+		print '<tr class="oddeven"><td class="fieldrequired width15">'.$langs->trans("Note").'</td>';
+		print '<td><input type="text" name="note" value="" class="centpercent"></td></tr>';
+		print '</table>';
+		print '<br>';
+
+		$sql = "SELECT rowid, ref, label FROM ".MAIN_DB_PREFIX."product";
+		$sql .= " WHERE entity IN (".getEntity('product').") AND tosell = 1";
+		if ($searchprod !== '') {
+			$sql .= " AND (ref LIKE '".$db->escape($searchprod)."%' OR label LIKE '%".$db->escape($searchprod)."%')";
+		}
+		$sql .= " ORDER BY ref";
+		$resql = $db->query($sql);
+
+		print '<table class="noborder centpercent">';
+		print '<tr class="liste_titre">';
+		print '<th>'.$langs->trans("Ref").'</th>';
+		print '<th>'.$langs->trans("Label").'</th>';
+		print '<th class="center">'.$langs->trans("QtyToProduce").'</th>';
+		print '<th class="center">'.$langs->trans("UnitCost").'</th>';
+		print '<th class="center">'.$langs->trans("Lot").'</th>';
+		print '<th class="center">'.$langs->trans("Eatby").'</th>';
+		print '<th class="center">'.$langs->trans("Sellby").'</th>';
+		print '</tr>';
+
+		if ($resql) {
+			$num = $db->num_rows($resql);
+			$i = 0;
+			$var = true;
+			while ($i < $num) {
+				$obj = $db->fetch_object($resql);
+				$var = !$var;
+
+				print '<tr class="oddeven'.($var ? '' : '1').'">';
+				print '<td class="nowrap">'.$obj->ref.'</td>';
+				print '<td>'.dol_escape_htmltag($obj->label).'</td>';
+				print '<td class="center"><input type="number" name="qty_['.$obj->rowid.']" min="0" step="any" value="0" class="width50"></td>';
+				print '<td class="center"><input type="number" name="cost_['.$obj->rowid.']" min="0" step="any" value="0" class="width75"></td>';
+				print '<td class="center"><input type="text" name="lot_['.$obj->rowid.']" value="" class="width100"></td>';
+				print '<td class="center"><input type="date" name="eatby_['.$obj->rowid.']" value="" class="width100"></td>';
+				print '<td class="center"><input type="date" name="sellby_['.$obj->rowid.']" value="" class="width100"></td>';
+				print '</tr>';
+				$i++;
+			}
+			if ($num == 0) {
+				print '<tr class="oddeven"><td colspan="7" class="opacitymedium">'.$langs->trans("None").'</td></tr>';
+			}
+			$db->free($resql);
+		} else {
+			dol_print_error($db);
+		}
+		print '</table>';
+
+		if ($cancreateprod) {
+			print '<div class="center marginbottomonly">';
+			print '<input type="submit" class="button" value="'.$langs->trans("Send").'">';
+			print '</div>';
+		} else {
+			print '<div class="center marginbottomonly opacitymedium">'.$langs->trans("NoPermissionToCreateProduction").'</div>';
+		}
+		print '</form>';
 	}
 } else {
 	// ------------------------------------------------------------

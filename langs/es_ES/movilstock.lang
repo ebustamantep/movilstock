@@ -67,3 +67,28 @@ NoPermissionToCreate = No tiene permisos para crear traslados.
 StockByWarehouse = Stock por almacén
 Warehouse = Almacén
 Product = Producto
+
+#
+# Página de producción
+#
+ProductionLoad = Carga de producción
+MovilStockProduction = Producción
+ProductionParams = Parámetros de producción
+DateProduction = Fecha de producción
+ProductionRefMask = Máscara de referencia de producción
+ProductionRefMaskHelp = Máscara usada para generar la referencia de una producción (ejemplo: /PR-{y}{m}{d}-{0000}).
+MainWarehouseNotConfigured = El almacén principal no está configurado.
+QtyToProduce = Cantidad producida
+UnitCost = Costo unitario
+Lot = Lote
+Eatby = Consumir antes de
+Sellby = Caducidad
+NoQtyToProduce = No se ingresó ninguna cantidad producida.
+ProductionDone = Producción registrada con éxito.
+NoPermissionToCreateProduction = No tiene permisos para registrar producciones.
+RecordDeletedProduction = Producción eliminada.
+
+#
+# Historial de producción
+#
+ProductionHistory = Historial de producción

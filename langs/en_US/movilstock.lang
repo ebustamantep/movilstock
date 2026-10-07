@@ -67,3 +67,28 @@ NoPermissionToCreate = You do not have permission to create transfers.
 StockByWarehouse = Stock by warehouse
 Warehouse = Warehouse
 Product = Product
+
+#
+# Production page
+#
+ProductionLoad = Production load
+MovilStockProduction = Production
+ProductionParams = Production parameters
+DateProduction = Production date
+ProductionRefMask = Production reference mask
+ProductionRefMaskHelp = Mask used to generate the reference of a production (example: /PR-{y}{m}{d}-{0000}).
+MainWarehouseNotConfigured = The main warehouse is not configured.
+QtyToProduce = Produced quantity
+UnitCost = Unit cost
+Lot = Lot
+Eatby = Eat-by date
+Sellby = Sell-by date
+NoQtyToProduce = No produced quantity was entered.
+ProductionDone = Production recorded successfully.
+NoPermissionToCreateProduction = You do not have permission to record productions.
+RecordDeletedProduction = Production deleted.
+
+#
+# Production history
+#
+ProductionHistory = Production history

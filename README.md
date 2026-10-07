@@ -4,6 +4,8 @@
 
 Transfer merchandise between warehouses. The operator selects a source warehouse and a destination warehouse, enters the quantities of the products to move and confirms; the stock is decreased in the source warehouse and increased in the destination warehouse, and each transfer is recorded in the history.
 
+Production load. The operator enters the produced quantities of finished goods (with optional unit cost, lot and expiry dates) and the stock is increased in the main warehouse, ready to be distributed to the mobile warehouses with the transfer feature. Each production is recorded in its own history.
+
 ## Installation
 
 Prerequisites: You must have Dolibarr ERP & CRM software installed. You can download it from [Dolistore.org](https://www.dolibarr.org).
@@ -21,6 +23,7 @@ Using your browser:
 - You should now be able to find and enable the module
 - Go to "Setup"> "Modules"> "MovilStock" and configure the main warehouse (used by default as the source of transfers) and the reference mask
 - Assign the `MovilStock -> transfer` permission to the users who should manage transfers
+- Assign the `MovilStock -> production` permission to the users who should manage production loadings
 
 ## Licenses
 

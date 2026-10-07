@@ -122,6 +122,7 @@ class modMovilStock extends DolibarrModules
 		$this->const = array(
 			1 => array('MOVILSTOCK_ID_WAREHOUSE_MAIN', 'chaine', '', 'Main warehouse that supplies POS terminals', 0, 'current', 1),
 			2 => array('MOVILSTOCK_TRANSFER_NUMBER', 'chaine', '/TS-{y}{m}{d}-{0000}', 'Mask for transfer references', 0, 'current', 1),
+			3 => array('MOVILSTOCK_PRODUCTION_NUMBER', 'chaine', '/PR-{y}{m}{d}-{0000}', 'Mask for production references', 0, 'current', 1),
 		);
 
 		if (!isModEnabled("movilstock")) {
@@ -151,6 +152,21 @@ class modMovilStock extends DolibarrModules
 		$this->rights[$r][0] = $this->numero . sprintf("%02d", (1 * 10) + 3); // 9580003
 		$this->rights[$r][1] = 'Delete transfers of MovilStock';
 		$this->rights[$r][4] = 'transfer';
+		$this->rights[$r][5] = 'delete';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf("%02d", (2 * 10) + 1); // 9580004
+		$this->rights[$r][1] = 'Read productions of MovilStock';
+		$this->rights[$r][4] = 'production';
+		$this->rights[$r][5] = 'read';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf("%02d", (2 * 10) + 2); // 9580005
+		$this->rights[$r][1] = 'Create productions of MovilStock';
+		$this->rights[$r][4] = 'production';
+		$this->rights[$r][5] = 'create';
+		$r++;
+		$this->rights[$r][0] = $this->numero . sprintf("%02d", (2 * 10) + 3); // 9580006
+		$this->rights[$r][1] = 'Delete productions of MovilStock';
+		$this->rights[$r][4] = 'production';
 		$this->rights[$r][5] = 'delete';
 		$r++;
 
@@ -200,6 +216,36 @@ class modMovilStock extends DolibarrModules
 			'position' => 1000 + $r,
 			'enabled' => "isModEnabled('movilstock')",
 			'perms' => '$user->hasRight("movilstock", "transfer", "read")',
+			'target' => '',
+			'user' => 2,
+		);
+		$this->menu[$r++] = array(
+			'fk_menu' => 'fk_mainmenu=movilstock',
+			'type' => 'left',
+			'titre' => 'ProductionLoad',
+			'prefix' => img_picto('', $this->picto, 'class="pictofixedwidth valignmiddle paddingright"'),
+			'mainmenu' => 'movilstock',
+			'leftmenu' => 'movilstock_production',
+			'url' => '/movilstock/movilstockindex.php?tab=production',
+			'langs' => 'movilstock@movilstock',
+			'position' => 1000 + $r,
+			'enabled' => "isModEnabled('movilstock')",
+			'perms' => '$user->hasRight("movilstock", "production", "read")',
+			'target' => '',
+			'user' => 2,
+		);
+		$this->menu[$r++] = array(
+			'fk_menu' => 'fk_mainmenu=movilstock',
+			'type' => 'left',
+			'titre' => 'ProductionHistory',
+			'prefix' => img_picto('', $this->picto, 'class="pictofixedwidth valignmiddle paddingright"'),
+			'mainmenu' => 'movilstock',
+			'leftmenu' => 'movilstock_production_history',
+			'url' => '/movilstock/movilstock_production_history.php',
+			'langs' => 'movilstock@movilstock',
+			'position' => 1000 + $r,
+			'enabled' => "isModEnabled('movilstock')",
+			'perms' => '$user->hasRight("movilstock", "production", "read")',
 			'target' => '',
 			'user' => 2,
 		);

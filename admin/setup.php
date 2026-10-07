@@ -118,6 +118,12 @@ $item->nameText = $langs->trans("TransferRefMask");
 $item->helpText = $langs->trans("TransferRefMaskHelp");
 $item->fieldAttr['placeholder'] = '/TS-{y}{m}{d}-{0000}';
 
+// Setup conf for production reference mask
+$item = $formSetup->newItem('MOVILSTOCK_PRODUCTION_NUMBER');
+$item->nameText = $langs->trans("ProductionRefMask");
+$item->helpText = $langs->trans("ProductionRefMaskHelp");
+$item->fieldAttr['placeholder'] = '/PR-{y}{m}{d}-{0000}';
+
 // End of definition of parameters
 
 $setupnotempty += count($formSetup->items);
