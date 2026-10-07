@@ -5,6 +5,7 @@
 - Add "Production load" tab and history to register produced quantities of finished goods into the main warehouse
 - New production reference mask, permissions (read/create/delete) and menu entries
 - Lot and expiry dates are optional when recording a production
+- Select the destination warehouse when recording a production (main warehouse preselected), so the tab works even if no main warehouse is configured
 - Preserve configured settings (main warehouse and reference masks) when the module is disabled and re-enabled
 - Add properly named llx_*.sql files so module tables are created on install
 - Fix transfer history detail not showing

@@ -78,6 +78,7 @@ DateProduction = Fecha de producción
 ProductionRefMask = Máscara de referencia de producción
 ProductionRefMaskHelp = Máscara usada para generar la referencia de una producción (ejemplo: /PR-{y}{m}{d}-{0000}).
 MainWarehouseNotConfigured = El almacén principal no está configurado.
+ProdWarehouseRequired = Debes seleccionar el almacén de destino de la producción.
 QtyToProduce = Cantidad producida
 UnitCost = Costo unitario
 Lot = Lote

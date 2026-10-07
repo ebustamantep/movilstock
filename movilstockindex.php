@@ -230,8 +230,9 @@ if ($action == 'confirm' && !empty($user->rights->movilstock->transfer->create))
 }
 
 if ($action == 'confirmprod' && !empty($user->rights->movilstock->production->create)) {
-	if (empty($mainwarehouse) || empty($warehouses[$mainwarehouse])) {
-		setEventMessages($langs->trans("MainWarehouseNotConfigured"), null, 'errors');
+	$prodwarehouse = GETPOSTINT('fk_warehouse_prod');
+	if (empty($prodwarehouse) || empty($warehouses[$prodwarehouse])) {
+		setEventMessages($langs->trans("ProdWarehouseRequired"), null, 'errors');
 		$error++;
 	}
 
@@ -270,7 +271,7 @@ if ($action == 'confirmprod' && !empty($user->rights->movilstock->production->cr
 		$db->begin();
 
 		$object = new MovilStockProduction($db);
-		$object->fk_warehouse = $mainwarehouse;
+		$object->fk_warehouse = $prodwarehouse;
 		$object->status = MovilStockProduction::STATUS_DONE;
 		$object->date_production = dol_now();
 		$object->fk_user_author = $user->id;
@@ -305,7 +306,7 @@ if ($action == 'confirmprod' && !empty($user->rights->movilstock->production->cr
 				$line->fk_production = $prodid;
 				$line->fk_product = $fkproduct;
 				$line->qty = $l['qty'];
-				$line->fk_warehouse = $mainwarehouse;
+				$line->fk_warehouse = $prodwarehouse;
 				$line->price = $l['price'];
 				$line->batch = $l['batch'];
 				$line->eatby = $eatbyts;
@@ -320,7 +321,7 @@ if ($action == 'confirmprod' && !empty($user->rights->movilstock->production->cr
 
 				$stocklabel = $langs->trans("MovilStockProduction").' '.$object->ref;
 
-				// Increase main warehouse (movement 0 = add).
+				// Increase destination warehouse (movement 0 = add).
 				// Lot and expiry are optional for now: when no lot is entered we skip the
 				// batch control (skip_batch = true) so a production can be saved without batch data.
 				// When a lot is entered it is recorded normally.
@@ -329,7 +330,7 @@ if ($action == 'confirmprod' && !empty($user->rights->movilstock->production->cr
 				$result1 = $movementstock->_create(
 					$user,
 					$product->id,
-					$mainwarehouse,
+					$prodwarehouse,
 					$l['qty'],
 					0,
 					$l['price'],
@@ -511,16 +512,23 @@ if ($tab == 'stock') {
 	}
 } elseif ($tab == 'production') {
 	// ------------------------------------------------------------
-	// Tab: Production load (increase stock in main warehouse)
+	// Tab: Production load (increase stock in a warehouse, main warehouse by default)
 	// ------------------------------------------------------------
-	if (empty($mainwarehouse) || empty($warehouses[$mainwarehouse])) {
-		print '<div class="warning">'.$langs->trans("MainWarehouseNotConfigured").'</div>';
+	if (empty($warehouses) || !is_array($warehouses)) {
+		print '<div class="warning">'.$langs->trans("NoWarehouse").'</div>';
 	} else {
+		// Destination warehouse: posted value, else the configured main warehouse, else none
+		$prodwarehouse = GETPOSTINT('fk_warehouse_prod');
+		if (empty($prodwarehouse) || empty($warehouses[$prodwarehouse])) {
+			$prodwarehouse = (!empty($mainwarehouse) && !empty($warehouses[$mainwarehouse])) ? $mainwarehouse : 0;
+		}
+
 		$searchprod = GETPOST('search_product', 'alpha');
 		$searchprod = dol_string_nospecial($searchprod);
 
 		print '<form method="GET" action="'.$_SERVER["PHP_SELF"].'" class="marginbottomonly">';
 		print '<input type="hidden" name="tab" value="production">';
+		print '<input type="hidden" name="fk_warehouse_prod" value="'.((int) $prodwarehouse).'">';
 		print '<table class="noborder centpercent">';
 		print '<tr class="liste_titre"><th colspan="2">'.$langs->trans("Filters").'</th></tr>';
 		print '<tr class="oddeven"><td class="fieldrequired width15">'.$langs->trans("Product").'</td>';
@@ -537,7 +545,17 @@ if ($tab == 'stock') {
 		print '<table class="noborder centpercent">';
 		print '<tr class="liste_titre"><th colspan="2">'.$langs->trans("ProductionParams").'</th></tr>';
 		print '<tr class="oddeven"><td class="fieldrequired width15">'.$langs->trans("DestWarehouse").'</td>';
-		print '<td>'.dol_escape_htmltag($warehouses[$mainwarehouse]).'</td></tr>';
+		print '<td><select name="fk_warehouse_prod" id="fk_warehouse_prod" class="minwidth200">';
+		print '<option value="0">--</option>';
+		foreach ($warehouses as $wid => $wlabel) {
+			$selected = ($wid == $prodwarehouse ? ' selected' : '');
+			print '<option value="'.$wid.'"'.$selected.'>'.dol_escape_htmltag($wlabel).'</option>';
+		}
+		print '</select>';
+		if (empty($mainwarehouse) || empty($warehouses[$mainwarehouse])) {
+			print ' <span class="opacitymedium">'.$langs->trans("MainWarehouseNotConfigured").'</span>';
+		}
+		print '</td></tr>';
 		print '<tr class="oddeven"><td class="fieldrequired width15">'.$langs->trans("Note").'</td>';
 		print '<td><input type="text" name="note" value="" class="centpercent"></td></tr>';
 		print '</table>';

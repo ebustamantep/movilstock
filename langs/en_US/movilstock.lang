@@ -78,6 +78,7 @@ DateProduction = Production date
 ProductionRefMask = Production reference mask
 ProductionRefMaskHelp = Mask used to generate the reference of a production (example: /PR-{y}{m}{d}-{0000}).
 MainWarehouseNotConfigured = The main warehouse is not configured.
+ProdWarehouseRequired = You must select the destination warehouse for the production.
 QtyToProduce = Produced quantity
 UnitCost = Unit cost
 Lot = Lot
