@@ -6,6 +6,7 @@
 /build/makepack-*.lock
 /build/*.zip
 /build/*.tar.gz
+/bin/*.zip
 
 # OS / editor
 Thumbs.db
