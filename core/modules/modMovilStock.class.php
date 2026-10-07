@@ -120,9 +120,9 @@ class modMovilStock extends DolibarrModules
 
 		// Constants
 		$this->const = array(
-			1 => array('MOVILSTOCK_ID_WAREHOUSE_MAIN', 'chaine', '', 'Main warehouse that supplies POS terminals', 0, 'current', 1),
-			2 => array('MOVILSTOCK_TRANSFER_NUMBER', 'chaine', '/TS-{y}{m}{d}-{0000}', 'Mask for transfer references', 0, 'current', 1),
-			3 => array('MOVILSTOCK_PRODUCTION_NUMBER', 'chaine', '/PR-{y}{m}{d}-{0000}', 'Mask for production references', 0, 'current', 1),
+			1 => array('MOVILSTOCK_ID_WAREHOUSE_MAIN', 'chaine', '', 'Main warehouse that supplies POS terminals', 0, 'current', 0),
+			2 => array('MOVILSTOCK_TRANSFER_NUMBER', 'chaine', '/TS-{y}{m}{d}-{0000}', 'Mask for transfer references', 0, 'current', 0),
+			3 => array('MOVILSTOCK_PRODUCTION_NUMBER', 'chaine', '/PR-{y}{m}{d}-{0000}', 'Mask for production references', 0, 'current', 0),
 		);
 
 		if (!isModEnabled("movilstock")) {
