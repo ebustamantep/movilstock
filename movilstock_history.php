@@ -51,6 +51,7 @@ if (!$res) {
 }
 
 require_once DOL_DOCUMENT_ROOT.'/product/stock/class/entrepot.class.php';
+require_once DOL_DOCUMENT_ROOT.'/user/class/user.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.form.class.php';
 dol_include_once('/movilstock/class/movilstocktransfer.class.php');
 
@@ -161,6 +162,7 @@ if ($candelete) {
 print '</tr>';
 
 $showlines = ($showtransfer > 0);
+$usercache = array();
 
 if ($resql) {
 	$num = $db->num_rows($resql);
@@ -201,7 +203,23 @@ if ($resql) {
 		}
 		print $nb.$toggle;
 		print '</td>';
-		print '<td>'.dol_escape_htmltag($obj->fk_user_author).'</td>';
+		$authorid = (int) $obj->fk_user_author;
+		if (!isset($usercache[$authorid])) {
+			$usercache[$authorid] = null;
+			if ($authorid > 0) {
+				$usertmp = new User($db);
+				if ($usertmp->fetch($authorid) > 0) {
+					$usercache[$authorid] = $usertmp;
+				}
+			}
+		}
+		print '<td>';
+		if (!empty($usercache[$authorid])) {
+			print $usercache[$authorid]->getNomUrl(1);
+		} else {
+			print dol_escape_htmltag($obj->fk_user_author);
+		}
+		print '</td>';
 		print '<td>';
 
 		$tmp = new MovilStockTransfer($db);
