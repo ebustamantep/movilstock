@@ -222,6 +222,21 @@ class modMovilStock extends DolibarrModules
 		$this->menu[$r++] = array(
 			'fk_menu' => 'fk_mainmenu=movilstock',
 			'type' => 'left',
+			'titre' => 'StockByWarehouse',
+			'prefix' => img_picto('', $this->picto, 'class="pictofixedwidth valignmiddle paddingright"'),
+			'mainmenu' => 'movilstock',
+			'leftmenu' => 'movilstock_stock',
+			'url' => '/movilstock/movilstockindex.php?tab=stock',
+			'langs' => 'movilstock@movilstock',
+			'position' => 1000 + $r,
+			'enabled' => "isModEnabled('movilstock')",
+			'perms' => '$user->hasRight("movilstock", "transfer", "read")',
+			'target' => '',
+			'user' => 2,
+		);
+		$this->menu[$r++] = array(
+			'fk_menu' => 'fk_mainmenu=movilstock',
+			'type' => 'left',
 			'titre' => 'MoveStockTransfer',
 			'prefix' => img_picto('', $this->picto, 'class="pictofixedwidth valignmiddle paddingright"'),
 			'mainmenu' => 'movilstock',
