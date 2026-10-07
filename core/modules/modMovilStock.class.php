@@ -67,7 +67,7 @@ class modMovilStock extends DolibarrModules
 		$this->editor_url = '';
 		$this->editor_squarred_logo = '';
 
-		$this->version = '1.0';
+		$this->version = '1.1';
 
 		// Key used in llx_const table to save module status enabled/disabled
 		$this->const_name = 'MAIN_MODULE_'.strtoupper($this->name); // MAIN_MODULE_MOVILSTOCK
