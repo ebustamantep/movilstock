@@ -367,7 +367,7 @@ if ($action == 'confirmprod' && !empty($user->rights->movilstock->production->cr
 
 llxHeader("", $langs->trans("ModuleMovilStockName"), '', '', 0, 0, '', '', '', 'mod-movilstock page-index');
 
-print load_fiche_titre($langs->trans("ModuleMovilStockName"), '', 'stock.png');
+print load_fiche_titre($langs->trans("ModuleMovilStockName"), '', 'fa-truck');
 
 // Build tabs header
 $head = array();

@@ -90,7 +90,7 @@ if ($action == 'delete' && $candelete && $showtransfer > 0) {
 
 llxHeader("", $langs->trans("TransferHistory"), '', '', 0, 0, '', '', '', 'mod-movilstock page-history');
 
-print load_fiche_titre($langs->trans("TransferHistory"), '', 'stock.png');
+print load_fiche_titre($langs->trans("TransferHistory"), '', 'fa-truck');
 
 // Build warehouse label cache
 $warehouses = array();

@@ -89,7 +89,7 @@ if ($action == 'delete' && $candelete && $showproduction > 0) {
 
 llxHeader("", $langs->trans("ProductionHistory"), '', '', 0, 0, '', '', '', 'mod-movilstock page-production-history');
 
-print load_fiche_titre($langs->trans("ProductionHistory"), '', 'stock.png');
+print load_fiche_titre($langs->trans("ProductionHistory"), '', 'fa-truck');
 
 // Build warehouse label cache
 $warehouses = array();

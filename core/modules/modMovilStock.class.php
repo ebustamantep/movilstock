@@ -73,7 +73,7 @@ class modMovilStock extends DolibarrModules
 		$this->const_name = 'MAIN_MODULE_'.strtoupper($this->name); // MAIN_MODULE_MOVILSTOCK
 
 		// Name of image file used for this module.
-		$this->picto = 'stock';
+		$this->picto = 'fa-truck';
 
 		// Define some features supported by module
 		$this->module_parts = array(

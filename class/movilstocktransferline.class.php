@@ -41,7 +41,7 @@ class MovilStockTransferLine extends CommonObjectLine
 	/**
 	 * @var string String with name of icon for movilstocktransferline.
 	 */
-	public $picto = 'stock';
+	public $picto = 'fa-truck';
 
 	/**
 	 * @var array<string,array{type:string,label:string,enabled:int|string,position:int,notnull?:int,visible:int|string,index?:int,default?:string}>

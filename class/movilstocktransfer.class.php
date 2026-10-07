@@ -56,7 +56,7 @@ class MovilStockTransfer extends CommonObject
 	/**
 	 * @var string String with name of icon for movilstocktransfer.
 	 */
-	public $picto = 'stock';
+	public $picto = 'fa-truck';
 
 	const STATUS_DONE = 1;
 	const STATUS_ERROR = 0;
