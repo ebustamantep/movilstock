@@ -54,6 +54,7 @@ require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 require_once DOL_DOCUMENT_ROOT.'/product/stock/class/entrepot.class.php';
 require_once DOL_DOCUMENT_ROOT.'/product/stock/class/mouvementstock.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.form.class.php';
+dol_include_once('/movilstock/lib/movilstock.lib.php');
 dol_include_once('/movilstock/class/movilstocktransfer.class.php');
 dol_include_once('/movilstock/class/movilstocktransferline.class.php');
 dol_include_once('/movilstock/class/movilstockproduction.class.php');
@@ -147,72 +148,11 @@ if ($action == 'confirm' && !empty($user->rights->movilstock->transfer->create))
 	if (!$error) {
 		$db->begin();
 
-		$object = new MovilStockTransfer($db);
-		$object->fk_warehouse_source = $fk_warehouse_source;
-		$object->fk_warehouse_dest = $fk_warehouse_dest;
-		$object->status = MovilStockTransfer::STATUS_DONE;
-		$object->date_transfer = dol_now();
-		$object->fk_user_author = $user->id;
-		$object->ref = $object->getNextNumRef();
-
-		$transferid = $object->create($user);
+		$errors = array();
+		$transferid = movilstockCrearTraslado($db, $user, $fk_warehouse_source, $fk_warehouse_dest, $lines, '', $errors);
 		if ($transferid <= 0) {
 			$error++;
-			setEventMessages($object->error, $object->errors, 'errors');
-		} else {
-			foreach ($lines as $fkproduct => $qty) {
-				$product = new Product($db);
-				$result = $product->fetch($fkproduct);
-				if ($result < 0) {
-					$error++;
-					setEventMessages($product->error, $product->errors, 'errors');
-					break;
-				}
-
-				$product->load_stock('novirtual');
-				$avail = 0;
-				if (isset($product->stock_warehouse[$fk_warehouse_source]->real)) {
-					$avail = (float) $product->stock_warehouse[$fk_warehouse_source]->real;
-				}
-				if ($qty > $avail) {
-					$error++;
-					setEventMessages($langs->trans("NotEnoughStock", $product->ref, $avail, $qty), null, 'errors');
-					break;
-				}
-
-				// Record line
-				$line = new MovilStockTransferLine($db);
-				$line->fk_transfer = $transferid;
-				$line->fk_product = $fkproduct;
-				$line->qty = $qty;
-				$line->fk_warehouse_source = $fk_warehouse_source;
-				$line->fk_warehouse_dest = $fk_warehouse_dest;
-				$line->entity = getEntity('movilstocktransfer');
-				$lineresult = $line->create($user);
-				if ($lineresult <= 0) {
-					$error++;
-					setEventMessages($line->error, $line->errors, 'errors');
-					break;
-				}
-
-				$stocklabel = $langs->trans("MovilStockTransfer").' '.$object->ref;
-
-				// Decrease source warehouse
-				$result1 = $product->correct_stock($user, $fk_warehouse_source, $qty, 1, $stocklabel, $product->pmp, '', 'movilstock', $transferid);
-				if ($result1 < 0) {
-					$error++;
-					setEventMessages($product->error, $product->errors, 'errors');
-					break;
-				}
-
-				// Increase destination warehouse
-				$result2 = $product->correct_stock($user, $fk_warehouse_dest, $qty, 0, $stocklabel, $product->pmp, '', 'movilstock', $transferid);
-				if ($result2 < 0) {
-					$error++;
-					setEventMessages($product->error, $product->errors, 'errors');
-					break;
-				}
-			}
+			setEventMessages('', $errors, 'errors');
 		}
 
 		if (!$error) {

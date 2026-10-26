@@ -52,3 +52,80 @@ function movilstockAdminPrepareHead()
 
 	return $head;
 }
+
+/**
+ * Registra un traslado entre almacenes: cabecera + líneas en el historial y los dos
+ * movimientos de stock por producto (salida del origen, entrada al destino). No abre ni
+ * cierra transacción: lo hace quien llama.
+ *
+ * @param DoliDB               $db
+ * @param User                 $user
+ * @param int                  $src     Almacén origen
+ * @param int                  $dst     Almacén destino
+ * @param array<int,float>     $lines   [fk_product => qty] (qty > 0)
+ * @param string               $label   Etiqueta de los movimientos ('' = "Traslado de stock")
+ * @param array<int,string>    $errors  Mensajes de error (por referencia)
+ * @return int                 id del traslado (>0) o <0 si error
+ */
+function movilstockCrearTraslado($db, $user, $src, $dst, $lines, $label, &$errors)
+{
+	global $langs;
+	dol_include_once('/movilstock/class/movilstocktransfer.class.php');
+	dol_include_once('/movilstock/class/movilstocktransferline.class.php');
+	require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
+	$langs->load('movilstock@movilstock');
+
+	$object = new MovilStockTransfer($db);
+	$object->fk_warehouse_source = $src;
+	$object->fk_warehouse_dest = $dst;
+	$object->status = MovilStockTransfer::STATUS_DONE;
+	$object->date_transfer = dol_now();
+	$object->fk_user_author = $user->id;
+	$object->ref = $object->getNextNumRef();
+
+	$transferid = $object->create($user);
+	if ($transferid <= 0) {
+		$errors = array_merge($errors, array($object->error), (array) $object->errors);
+		return -1;
+	}
+
+	$stocklabel = ($label !== '' ? $label : $langs->trans("MovilStockTransfer")).' '.$object->ref;
+	foreach ($lines as $fkproduct => $qty) {
+		$product = new Product($db);
+		if ($product->fetch($fkproduct) <= 0) {
+			$errors[] = $product->error ? $product->error : 'Product '.$fkproduct.' not found';
+			return -1;
+		}
+
+		$product->load_stock('novirtual');
+		$avail = 0;
+		if (isset($product->stock_warehouse[$src]->real)) {
+			$avail = (float) $product->stock_warehouse[$src]->real;
+		}
+		if ($qty > $avail) {
+			$errors[] = $langs->trans("NotEnoughStock", $product->ref, $avail, $qty);
+			return -1;
+		}
+
+		$line = new MovilStockTransferLine($db);
+		$line->fk_transfer = $transferid;
+		$line->fk_product = $fkproduct;
+		$line->qty = $qty;
+		$line->fk_warehouse_source = $src;
+		$line->fk_warehouse_dest = $dst;
+		$line->entity = getEntity('movilstocktransfer');
+		if ($line->create($user) <= 0) {
+			$errors = array_merge($errors, array($line->error), (array) $line->errors);
+			return -1;
+		}
+
+		// Salida del origen y entrada al destino
+		if ($product->correct_stock($user, $src, $qty, 1, $stocklabel, $product->pmp, '', 'movilstock', $transferid) < 0
+			|| $product->correct_stock($user, $dst, $qty, 0, $stocklabel, $product->pmp, '', 'movilstock', $transferid) < 0) {
+			$errors = array_merge($errors, array($product->error), (array) $product->errors);
+			return -1;
+		}
+	}
+
+	return (int) $transferid;
+}
