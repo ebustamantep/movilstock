@@ -200,7 +200,8 @@ class MovilStockProduction extends CommonObject
 			$sql = "SELECT MAX(CAST(SUBSTRING(ref, ".((int) (dol_strlen($prefix) + 1)).") AS UNSIGNED)) as maxseq";
 			$sql .= " FROM ".MAIN_DB_PREFIX.$this->table_element;
 			$sql .= " WHERE entity IN (".getEntity('movilstockproduction').")";
-			$sql .= " AND ref LIKE '".$db->escape($prefix)."%'";
+			// La ref se guarda con "_" en lugar de "/": se buscan las dos formas del prefijo.
+			$sql .= " AND (ref LIKE '".$db->escape($prefix)."%' OR ref LIKE '".$db->escape(str_replace('/', '_', $prefix))."%')";
 			$resql = $db->query($sql);
 			if ($resql) {
 				$obj = $db->fetch_object($resql);

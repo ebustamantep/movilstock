@@ -187,31 +187,34 @@ class MovilStockTransfer extends CommonObject
 		$mask = getDolGlobalString('MOVILSTOCK_TRANSFER_NUMBER', '/TS-{y}{m}{d}-{0000}');
 		$now = dol_now();
 
-		$seq = 1;
-		$sql = "SELECT MAX(CAST(SUBSTRING(ref, LOCATE('-', ref) + 1, 4) AS UNSIGNED)) as maxseq";
-		$sql .= " FROM ".MAIN_DB_PREFIX.$this->table_element;
-		$sql .= " WHERE entity IN (".getEntity('movilstocktransfer').")";
-		$sql .= " AND ref LIKE '".$db->escape(date('Ymd', $now))."%'";
-		$resql = $db->query($sql);
-		if ($resql) {
-			$obj = $db->fetch_object($resql);
-			if ($obj && $obj->maxseq > 0) {
-				$seq = ((int) $obj->maxseq) + 1;
-			}
-			$db->free($resql);
-		}
-
-		$seqstr = str_pad((string) $seq, 4, '0', STR_PAD_LEFT);
-
 		$mask = str_replace('{y}', date('Y', $now), $mask);
 		$mask = str_replace('{m}', date('m', $now), $mask);
 		$mask = str_replace('{d}', date('d', $now), $mask);
 		$mask = str_replace('{h}', date('H', $now), $mask);
 		$mask = str_replace('{i}', date('i', $now), $mask);
 		$mask = str_replace('{s}', date('s', $now), $mask);
-		$mask = str_replace('{0000}', $seqstr, $mask);
 
-		return $mask;
+		$seq = 1;
+		$pos = strpos($mask, '{0000}');
+		if ($pos !== false) {
+			// La ref se guarda con "_" en lugar de "/" (p. ej. "_TS-20261026-0001"): se
+			// buscan las dos formas del prefijo.
+			$prefix = substr($mask, 0, $pos);
+			$sql = "SELECT MAX(CAST(SUBSTRING(ref, ".((int) (dol_strlen($prefix) + 1)).") AS UNSIGNED)) as maxseq";
+			$sql .= " FROM ".MAIN_DB_PREFIX.$this->table_element;
+			$sql .= " WHERE entity IN (".getEntity('movilstocktransfer').")";
+			$sql .= " AND (ref LIKE '".$db->escape($prefix)."%' OR ref LIKE '".$db->escape(str_replace('/', '_', $prefix))."%')";
+			$resql = $db->query($sql);
+			if ($resql) {
+				$obj = $db->fetch_object($resql);
+				if ($obj && $obj->maxseq > 0) {
+					$seq = ((int) $obj->maxseq) + 1;
+				}
+				$db->free($resql);
+			}
+		}
+
+		return str_replace('{0000}', str_pad((string) $seq, 4, '0', STR_PAD_LEFT), $mask);
 	}
 
 	/**
